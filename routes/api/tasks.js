@@ -48,8 +48,15 @@ router.get('/tasks',authenticateToken,async(req,res) =>{
 })
 
 //? API to Update a user
-router.put('/:id',authenticateToken,async(req,res) =>{
+router.put('/update/:id',[authenticateToken,[
+     body('status' , 'status must be to-do or in-progress or done').isIn(['to-do','in-progress','done']),],],
+     async(req,res) =>{
      try {
+          const errors = validationResult(req);
+          if(!errors.isEmpty()){
+               return res.status(400).json({errors : errors.array()});
+          }
+          
           const id = req.params.id;
           const userId = req.user.id;
           const body = req.body
@@ -65,6 +72,31 @@ router.put('/:id',authenticateToken,async(req,res) =>{
      }
 })
 
+//? User Change his Task Status
+router.put('/:id',[authenticateToken,[
+     body('status' , 'status is required').notEmpty(),
+     body('status' , 'status must be to-do or in-progress or done').isIn(['to-do','in-progress','done']),],],
+     async(req,res) =>{
+     try {
+          const errors = validationResult(req);
+          if(!errors.isEmpty()){
+               return res.status(400).json({errors : errors.array()});
+          }
+
+          const id = req.params.id;
+          const userId = req.user.id;
+          const status = req.body.status;
+          const task = await Task.findOneAndUpdate({_id : id , userId : userId},{status : status},{new : true});
+          if(task){
+               res.json(task);
+          }
+          else {
+               res.status(404).json({message:"Task Not Found"});
+          }
+     } catch (error) {
+          res.status(500).json({message : `SomeThing wrong in Server`});
+     }
+})
 //? API to LOG IN
 router.post(
      '/users/login',
