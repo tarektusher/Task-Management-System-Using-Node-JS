@@ -56,7 +56,7 @@ router.put('/update/:id',[authenticateToken,[
           if(!errors.isEmpty()){
                return res.status(400).json({errors : errors.array()});
           }
-          
+
           const id = req.params.id;
           const userId = req.user.id;
           const body = req.body
@@ -97,6 +97,23 @@ router.put('/:id',[authenticateToken,[
           res.status(500).json({message : `SomeThing wrong in Server`});
      }
 })
+
+//? A user can see one of his created Task
+router.get('/:id',authenticateToken,async(req,res) =>{
+     try {
+          const id =req.params.id;
+          const userId =req.user.id;
+          const task = await Task.findOne({_id : id , userId : userId});
+          if(task){
+               res.json(task);
+          }
+          else{
+               res.status(404).json({message:"User Not Found"});
+          }
+     } catch (error) {
+          res.status(500).json({message : `SomeThing wrong in Server`});
+     }
+})
 //? API to LOG IN
 router.post(
      '/users/login',
@@ -130,21 +147,7 @@ router.post(
      }
 })
 
-//? get a user profile 
-router.get('/profile',authenticateToken,async(req,res) =>{
-     try {
-          const id =req.user.id;
-          const user = await User.findById(id);
-          if(user){
-               res.json(user);
-          }
-          else{
-               res.status(404).json({message:"User Not Found"});
-          }
-     } catch (error) {
-          res.status(500).json({message : `SomeThing wrong in Server`});
-     }
-})
+
 
 
 
