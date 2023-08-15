@@ -47,6 +47,24 @@ router.get('/tasks',authenticateToken,async(req,res) =>{
      }
 })
 
+//? API to Update a user
+router.put('/:id',authenticateToken,async(req,res) =>{
+     try {
+          const id = req.params.id;
+          const userId = req.user.id;
+          const body = req.body
+          const task = await Task.findOneAndUpdate({_id : id , userId : userId},body,{new : true});
+          if(task){
+               res.json(task);
+          }
+          else {
+               res.status(404).json({message:"Task Not Found"});
+          }
+     } catch (error) {
+          res.status(500).json({message : `SomeThing wrong in Server`});
+     }
+})
+
 //? API to LOG IN
 router.post(
      '/users/login',
@@ -114,22 +132,6 @@ router.get('/users',authenticateToken,async (req,res)=>{
      }
 })
 
-//? API to Update a user
-router.put('/users',authenticateToken,async(req,res) =>{
-     try {
-          const id = req.user.id;
-          const body = req.body
-          const user = await User.findByIdAndUpdate(id,body,{new : true});
-          if(user){
-               res.json(user);
-          }
-          else {
-               res.status(404).json({message:"User Not Found"});
-          }
-     } catch (error) {
-          res.status(500).json({message : `SomeThing wrong in Server`});
-     }
-})
 
 //? API to DELETE a user
 router.delete('/users',authenticateToken,async(req,res) =>{
