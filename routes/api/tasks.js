@@ -34,6 +34,19 @@ router.post(
      }
 })
 
+
+//? API to get Users 
+router.get('/tasks',authenticateToken,async(req,res) =>{
+     try {
+          const  id  = req.user.id;
+          const Tasks =  await Task.find({userId: id})
+          res.json(Tasks);
+          
+     } catch (error) {
+          res.status(404).json(`User not Found`);
+     }
+})
+
 //? API to LOG IN
 router.post(
      '/users/login',
@@ -83,16 +96,7 @@ router.get('/profile',authenticateToken,async(req,res) =>{
      }
 })
 
-//? API to get Users 
-router.get('/users',async(req,res) =>{
-     try {
-          const users =  await User.find({})
-          res.json(users);
-          
-     } catch (error) {
-          res.status(404).json(`User not Found`);
-     }
-})
+
 
 //? API to get specfic user
 router.get('/users',authenticateToken,async (req,res)=>{
