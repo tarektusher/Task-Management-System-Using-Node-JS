@@ -9,6 +9,7 @@
 
 5. A user can see one of his created Task <br>
 6. Another user can't see other user Task's <br>
+7. A user can delete one of his created Task <br>
 
 
 # Packages Name

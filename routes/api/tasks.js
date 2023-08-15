@@ -114,70 +114,20 @@ router.get('/:id',authenticateToken,async(req,res) =>{
           res.status(500).json({message : `SomeThing wrong in Server`});
      }
 })
-//? API to LOG IN
-router.post(
-     '/users/login',
-     [
-          body('type' , 'type is Required').notEmpty(),
-          body('type' , 'type must be email or refresh').isIn(['email','refresh']),
-
-     ],
-      async(req,res) =>{
-     try {
-          const errors = validationResult(req);
-          if(!errors.isEmpty()){
-               return res.status(400).json({errors : errors.array()});
-          }
-          const {email , password, type, refreshToken} = req.body;
-          if(!type){
-               res.status(401).json({message : `Type is not defined`});
-          }
-          else{
-               if(type == 'email'){
-                    await handleEmail(email, res, password);
-               }
-               else{
-                    handleRefreshToken(refreshToken, res);
-                    
-               }
-          }
-     } catch (error) {
-          console.error(error);
-          res.status(500).json({message : `Something is worng in the server`});
-     }
-})
 
 
 
-
-
-//? API to get specfic user
-router.get('/users',authenticateToken,async (req,res)=>{
-     try {
-          const id =req.user.id;
-          const user = await User.findById(id);
-          if(user){
-               res.json(user);
-          }
-          else{
-               res.status(404).json({message:"User Not Found"});
-          }
-     } catch (error) {
-          res.status(500).json({message : `SomeThing wrong in Server`});
-     }
-})
-
-
-//? API to DELETE a user
+//? A user can delete one of his created Task
 router.delete('/users',authenticateToken,async(req,res) =>{
      try {
-          const id =req.user.id;
-          const user = await User.findByIdAndDelete(id);
-          if(user){
-               res.status(200).json(user);
+          const id =req.params.id;
+          const userId = req.user.id;
+          const task = await Task.findOneAndDelete({_id : id , userId : userId});
+          if(task){
+               res.status(200).json(task);
           }
           else {
-               res.status(404).json({message : "User is not Found"});
+               res.status(404).json({message : "Task is not Found"});
           }
      } catch (error) {
           res.status(500).json({message : `SomeThing wrong in Server`});
@@ -185,51 +135,3 @@ router.delete('/users',authenticateToken,async(req,res) =>{
 
 })
 module.exports = router;
-
-function handleRefreshToken(refreshToken, res) {
-     if(!refreshToken){
-          res.status(401).json({message : `RefreshToken is not defined`})
-     }
-     else{
-          jwt.verify(refreshToken, process.env.JWT_Secret, async (err, payload) => {
-               if (err) {
-                    res.status(401).json({ message: `Unauthorized` });
-               }
-               else {
-                    const id = payload.id;
-                    const user = await User.findById(id);
-                    if (user) {
-                         res.status(401).json(user);
-     
-                    }
-                    else {
-                         getUserTokens(user, res);
-                    }
-               }
-          });
-     }
-}
-function getUserTokens(user, res) {
-     const accessToken = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_Secret, { expiresIn: '1m' });
-     const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_Secret, { expiresIn: '3m' });
-     const userObj = user.toJSON();
-     userObj['accessToken'] = accessToken;
-     userObj['refreshToken'] = refreshToken;
-     res.json(userObj);
-}
-
-async function handleEmail(email, res, password) {
-     const user = await User.findOne({ email: email });
-     if (!user) {
-          res.status(401).json({ message: `User is not found` });
-     }
-     else {
-          const validPassword = await bycript.compare(password, user.password);
-          if (!validPassword) {
-               res.status(401).json({ message: `Wrong Password` });
-          }
-          else {
-               getUserTokens(user, res);
-          }
-     }
-}
